@@ -10,6 +10,8 @@ FINE_TUNED_MODEL_PATH = os.path.join(
     "models",
     "fake-news-bert",
 )
+# Pre-downloaded base BERT (e.g. in Docker); set BERT_PRETRAINED_PATH to avoid Hugging Face at runtime
+BERT_PRETRAINED_PATH = os.environ.get("BERT_PRETRAINED_PATH", "")
 FEEDBACK_FILE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
     "feedback_disagreements.jsonl",
@@ -23,10 +25,13 @@ class BERTDetector:
 
         print(f"Using device: {self.device}")
 
-        # Use fine-tuned model if available, otherwise fall back to base BERT
+        # Use fine-tuned model if available, then pre-downloaded base BERT, else Hugging Face id
         if os.path.exists(os.path.join(FINE_TUNED_MODEL_PATH, "config.json")):
             model_path = FINE_TUNED_MODEL_PATH
             print("Loading fine-tuned model (trained on LIAR dataset)...")
+        elif BERT_PRETRAINED_PATH and os.path.exists(BERT_PRETRAINED_PATH):
+            model_path = BERT_PRETRAINED_PATH
+            print("Loading base BERT from pre-downloaded path...")
         else:
             model_path = "bert-base-uncased"
             print("Fine-tuned model not found. Using base BERT (run train_bert.py to improve accuracy)...")

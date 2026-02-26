@@ -16,6 +16,17 @@ RUN grep -v '^torch' requirements.txt > /tmp/req.txt && pip install --no-cache-d
 
 # App code
 COPY . .
+
+# Pre-download BERT so the container does not need Hugging Face at runtime (fixes "Can't load tokenizer")
+ENV BERT_PRETRAINED_PATH=/app/models/bert-base-uncased
+RUN mkdir -p /app/models/bert-base-uncased && python -c "\
+from transformers import BertTokenizer, BertForSequenceClassification; \
+p='/app/models/bert-base-uncased'; \
+BertTokenizer.from_pretrained('bert-base-uncased').save_pretrained(p); \
+BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2).save_pretrained(p); \
+print('BERT saved to', p); \
+"
+
 # Cloud Run sets PORT (default 8080)
 ENV PORT=8080
 EXPOSE 8080
