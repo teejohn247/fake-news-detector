@@ -12,6 +12,6 @@ services:
 
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.18
+        value: "3.12.4"
 
     # BERT needs ~2GB RAM. Upgrade to Starter/paid in Dashboard if the app crashes at startup.
