@@ -1,5 +1,9 @@
 # Deploy Fake News Detector on Render
 
+**Running out of memory (512 MB) on Render?** → Use **Google Cloud Run** instead: see **[DEPLOY_GOOGLE_CLOUD.md](DEPLOY_GOOGLE_CLOUD.md)**. Cloud Run’s free tier allows **2 GB memory**, so BERT runs at no cost for moderate traffic.
+
+---
+
 ## Prerequisites
 
 - A [Render](https://render.com) account (free tier works for trying; BERT may need more RAM).
