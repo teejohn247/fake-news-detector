@@ -3,8 +3,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Build tools for packages that compile C extensions (e.g. lru-dict)
-RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+# Build tools + C lib headers for packages that compile C extensions (e.g. lru-dict)
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Install torch CPU-only first (Cloud Run has no GPU; avoids ~3GB CUDA deps)
