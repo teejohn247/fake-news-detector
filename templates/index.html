@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector - AI-Powered Verification</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            padding: 24px;
+            color: #1a1a2e;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 28px;
+            padding: 28px 24px;
+            background: linear-gradient(135deg, #5c6bc0 0%, #3f51b5 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 1.85rem; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.02em; }
+        .header p { font-size: 1rem; opacity: 0.95; }
+        .main-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 28px 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            border: 1px solid #e8eaed;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: #fff;
+            color: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e8eaed;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .feature-card h3 { margin-bottom: 8px; font-size: 1.05rem; font-weight: 600; color: #5c6bc0; }
+        .feature-card p { font-size: 0.88rem; line-height: 1.5; color: #5f6368; }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        .input-section label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 20px;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 18px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-check { background: #5c6bc0; color: white; }
+        .btn-check:hover { background: #3f51b5; transform: translateY(-1px); }
+        
+        .btn-clear {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-history {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .btn-history:hover {
+            background: #45a049;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .result-header {
+            text-align: center;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .result-header.real {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .result-header.fake {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+        }
+
+        .result-header.inconclusive {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+        
+        .result-header h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .detail-card {
+            background: #fafafa;
+            padding: 22px;
+            border-radius: 10px;
+            border: 1px solid #e8eaed;
+        }
+        .detail-card h3 {
+            color: #1a1a2e;
+            margin-bottom: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e8eaed;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .agreement-box {
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .agreement-box.disagree {
+            background: #fff3e0;
+        }
+        
+        .blockchain-info {
+            background: #fafafa;
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid #e8eaed;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        .blockchain-info h4 { margin-bottom: 10px; color: #1a1a2e; font-size: 0.95rem; }
+        
+        .history-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .history-content {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid #e8eaed;
+        }
+        
+        .close-btn {
+            float: right;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .history-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+        
+        .status-real {
+            color: #4caf50;
+            font-weight: 600;
+        }
+        
+        .status-fake {
+            color: #f44336;
+            font-weight: 600;
+        }
+
+        .chart-wrapper {
+            margin-top: 20px;
+            padding: 16px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e8eaed;
+        }
+        .chart-wrapper .chart-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #5f6368;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .chart-container {
+            position: relative;
+            height: 240px;
+            min-height: 200px;
+        }
+        .chart-container canvas {
+            max-width: 100%;
+        }
+        .results-charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 768px) { .results-charts-row { grid-template-columns: 1fr; } }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stats-card {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e8eaed;
+        }
+        .stats-card h3 { color: #1a1a2e; margin-bottom: 12px; font-size: 1rem; font-weight: 600; }
+
+        .criteria-list {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .criteria-list p {
+            padding: 4px 0;
+            color: #555;
+        }
+
+        .criteria-list .positive { color: #4caf50; }
+        .criteria-list .negative { color: #f44336; }
+        .criteria-list .neutral { color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Fake News Detector</h1>
+            <p>AI-Powered News Verification System</p>
+            <a href="/verify">Verify blockchain records →</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <h3>🤖 AI Detection</h3>
+                <p>BERT model and heuristic rules must both agree. If they disagree, BERT learns from the heuristic.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📋 Rule Checker</h3>
+                <p>Heuristic rules for sensational language, caps, sources. Guides BERT when they disagree.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔒 Blockchain</h3>
+                <p>Only agreed-upon results are saved. Tamper-proof records anyone can verify.</p>
+            </div>
+        </div>
+
+        <div class="main-card stats-dashboard">
+            <h3 style="color: #1a1a2e; font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">📊 System Statistics</h3>
+            <div class="stats-section">
+                <div class="stats-card" style="flex: 1;">
+                    <h3>Real vs Fake News in System</h3>
+                    <div class="chart-container" style="height: 220px;">
+                        <canvas id="mainStatsChart"></canvas>
+                    </div>
+                    <p id="mainStatsSummary" style="margin-top: 10px; font-size: 0.9rem; color: #666;">Loading...</p>
+                </div>
+                <div class="stats-card" style="flex: 1;">
+                    <h3>Blockchain Record Growth Over Time</h3>
+                    <div class="chart-container" style="height: 220px;">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-card">
+            <div class="input-section">
+                <label for="newsText">Enter News Article to Verify:</label>
+                <textarea 
+                    id="newsText" 
+                    placeholder="Paste the news article here... (minimum 10 characters)"
+                ></textarea>
+                <label for="sourceUrl" style="margin-top: 15px; font-size: 0.95rem;">Where did you find this? (optional)</label>
+                <input 
+                    type="url" 
+                    id="sourceUrl" 
+                    placeholder="Paste source URL e.g. https://www.theguardian.com/..."
+                    style="width: 100%; padding: 12px; margin-top: 8px; font-size: 0.9rem; border: 1px solid #e8eaed; border-radius: 8px;"
+                />
+                <p style="font-size: 0.85rem; color: #666; margin-top: 6px;">Adding the source URL (e.g. Guardian, BBC, Reuters) helps us trust the article.</p>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-check" onclick="checkNews()">
+                    🔍 Check News
+                </button>
+                <button class="btn-clear" onclick="clearForm()">
+                    🗑️ Clear
+                </button>
+                <button class="btn-history" onclick="showHistory()">
+                    📊 View History
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing article with AI and rule-based detection...</p>
+            </div>
+            
+            <div class="results" id="results">
+                <div class="result-header" id="resultHeader">
+                    <h2 id="resultLabel"></h2>
+                    <div class="confidence-badge" id="confidenceBadge"></div>
+                </div>
+                
+                <div class="agreement-box" id="agreementBox"></div>
+                
+                <div class="result-details">
+                    <div class="detail-card">
+                        <h3>🤖 AI Model (BERT)</h3>
+                        <div id="bertDetails"></div>
+                        <div class="chart-wrapper">
+                            <div class="chart-title">BERT Prediction Probabilities</div>
+                            <div class="chart-container">
+                                <canvas id="bertProbChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <h3>📋 Rule Checker</h3>
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 12px;">Each "yes" (good sign) adds points. High score = likely real. Low score = likely fake.</p>
+                        <div id="heuristicDetails"></div>
+                        <div class="chart-wrapper">
+                            <div class="chart-title">Heuristic Criteria Breakdown</div>
+                            <div class="chart-container">
+                                <canvas id="criteriaChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-charts-row">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Blockchain Record Growth Over Time</div>
+                        <div class="chart-container" style="height: 220px;">
+                            <canvas id="resultsGrowthChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">Model Confidence (This Result)</div>
+                        <div class="chart-container" style="height: 220px;">
+                            <canvas id="resultsModelCompareChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="blockchain-info">
+                    <h4>🔒 Blockchain Record</h4>
+                    <div id="blockchainDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="history-modal" id="historyModal">
+        <div class="history-content">
+            <span class="close-btn" onclick="closeHistory()">&times;</span>
+            <h2>Verification History</h2>
+            <div class="stats-section">
+                <div class="stats-card">
+                    <h3>📊 Real vs Fake in System</h3>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="statsChart"></canvas>
+                    </div>
+                    <p id="statsSummary" style="margin-top: 10px; font-size: 0.9rem; color: #666;"></p>
+                </div>
+                <div class="stats-card" style="flex: 0 0 auto;">
+                    <h3>Criteria Legend</h3>
+                    <div class="criteria-list">
+                        <p><strong>Too many CAPS?</strong> Yes = −</p>
+                        <p><strong>Emotional words?</strong> Yes = −</p>
+                        <p><strong>Trusted source?</strong> Yes = +</p>
+                        <p><strong>Factual statement?</strong> Yes = +</p>
+                        <p><strong>Excessive !!!????</strong> Yes = −</p>
+                    </div>
+                </div>
+            </div>
+            <table class="history-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Article ID</th>
+                        <th>Result</th>
+                        <th>Timestamp</th>
+                        <th>Block #</th>
+                        <th>Verify</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        async function checkNews() {
+            const text = document.getElementById('newsText').value.trim();
+            
+            if (text.length < 10) {
+                alert('Please enter at least 10 characters');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            try {
+                const sourceUrl = document.getElementById('sourceUrl').value.trim();
+                const response = await fetch('/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text, source_url: sourceUrl || undefined })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                displayResults(data);
+                
+            } catch (error) {
+                alert('Error checking news: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        function displayResults(data) {
+            const resultHeader = document.getElementById('resultHeader');
+            const resultLabel = document.getElementById('resultLabel');
+            const blockchainSection = document.querySelector('.blockchain-info');
+
+            if (data.conclusive === false) {
+                resultLabel.textContent = 'INCONCLUSIVE';
+                resultHeader.className = 'result-header inconclusive';
+                document.getElementById('confidenceBadge').textContent = 'Systems disagree';
+                document.getElementById('agreementBox').innerHTML =
+                    '⚠️ ' + (data.message || 'AI and Rule Checker could not agree. BERT was retrained; try again or check back later.');
+                document.getElementById('agreementBox').className = 'agreement-box disagree';
+                blockchainSection.innerHTML = '<p><strong>Not saved to blockchain</strong> — Only agreed-upon verifications are stored.</p>';
+            } else {
+                resultLabel.textContent = data.result;
+                resultHeader.className = 'result-header ' + data.result.toLowerCase();
+                document.getElementById('confidenceBadge').textContent =
+                    `${data.confidence || 'HIGH'} Confidence`;
+                document.getElementById('agreementBox').innerHTML = '✅ Both AI and Rule Checker agree on this result';
+                document.getElementById('agreementBox').className = 'agreement-box';
+                blockchainSection.innerHTML = `
+                    <h4>🔒 Blockchain Record</h4>
+                    <p><strong>Article ID:</strong> ${data.blockchain.article_id}</p>
+                    <p><strong>Transaction Hash:</strong> ${data.blockchain.transaction_hash}</p>
+                    <p><strong>Status:</strong> Permanently recorded ✓</p>
+                    ${data.blockchain.verify_url ? `<p><a href="${data.blockchain.verify_url}" target="_blank">Verify this record →</a></p>` : ''}
+                `;
+            }
+            
+            // BERT details
+            const bertDetails = document.getElementById('bertDetails');
+            const heuristicDetails = document.getElementById('heuristicDetails');
+            const bertProbs = data.bert.probabilities || { real: 0, fake: 0 };
+            bertDetails.innerHTML = `
+                <div class="detail-item">
+                    <span>Prediction:</span>
+                    <strong>${data.bert.label}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Confidence:</span>
+                    <strong>${((data.bert.confidence || 0) * 100).toFixed(2)}%</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Real Probability:</span>
+                    <strong>${(bertProbs.real * 100).toFixed(2)}%</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Fake Probability:</span>
+                    <strong>${(bertProbs.fake * 100).toFixed(2)}%</strong>
+                </div>
+            `;
+            const details = data.heuristic.details || {};
+            const labels = data.heuristic.details_labels || Object.fromEntries(Object.keys(details).map(k => [k, k]));
+            const criteriaHtml = Object.keys(details).map(key => {
+                const val = details[key];
+                const label = labels[key] || key;
+                const cls = val > 0 ? 'positive' : (val < 0 ? 'negative' : 'neutral');
+                const sign = val > 0 ? '+' : '';
+                return `<div class="detail-item"><span>${label}</span><strong class="${cls}">${sign}${val}</strong></div>`;
+            }).join('');
+            heuristicDetails.innerHTML = `
+                <div class="detail-item">
+                    <span>Prediction:</span>
+                    <strong>${data.heuristic.label}</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Confidence:</span>
+                    <strong>${(data.heuristic.confidence * 100).toFixed(2)}%</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Total Score:</span>
+                    <strong>${data.heuristic.score >= 0 ? '+' : ''}${data.heuristic.score}</strong>
+                </div>
+                ${criteriaHtml}
+            `;
+
+            // Show results FIRST so chart containers have real dimensions
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+            // Render charts after layout (they need visible container to get correct size)
+            requestAnimationFrame(function() {
+                setTimeout(function() {
+                    renderBertProbChart(bertProbs.real, bertProbs.fake);
+                    renderCriteriaChart(details, labels);
+                    renderResultsModelCompareChart(
+                        data.bert.confidence || 0,
+                        data.heuristic.confidence || 0,
+                        data.agreement === true
+                    );
+                    renderResultsGrowthChart();
+                }, 50);
+            });
+        }
+        
+        function clearForm() {
+            document.getElementById('newsText').value = '';
+            document.getElementById('results').style.display = 'none';
+        }
+        
+        async function showHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                
+                const tbody = document.getElementById('historyBody');
+                tbody.innerHTML = '';
+                
+                if (data.records && data.records.length > 0) {
+                    data.records.reverse().forEach(record => {
+                        const row = tbody.insertRow();
+                        const verifyLink = record.hash
+                            ? `<a href="/verify?hash=${record.hash}" target="_blank">Verify</a>`
+                            : '-';
+                        row.innerHTML = `
+                            <td>${record.article_id}</td>
+                            <td class="status-${record.result.toLowerCase()}">${record.result}</td>
+                            <td>${new Date(record.timestamp).toLocaleString()}</td>
+                            <td>#${record.block_number}</td>
+                            <td>${verifyLink}</td>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No records yet</td></tr>';
+                }
+                
+                document.getElementById('historyModal').style.display = 'block';
+                renderStatsChart();
+                loadMainStats();
+            } catch (error) {
+                alert('Error loading history: ' + error.message);
+            }
+        }
+        
+        function closeHistory() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        let criteriaChartInstance = null;
+        let statsChartInstance = null;
+        let mainStatsChartInstance = null;
+        let growthChartInstance = null;
+        let bertProbChartInstance = null;
+        let resultsGrowthChartInstance = null;
+        let resultsModelCompareChartInstance = null;
+
+        function renderBertProbChart(realProb, fakeProb) {
+            const ctx = document.getElementById('bertProbChart');
+            if (!ctx) return;
+            if (bertProbChartInstance) bertProbChartInstance.destroy();
+            const r = Math.round((realProb || 0) * 100);
+            const f = Math.round((fakeProb || 0) * 100);
+            bertProbChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Real', 'Fake'],
+                    datasets: [{
+                        label: 'Probability (%)',
+                        data: [r, f],
+                        backgroundColor: ['rgba(76, 175, 80, 0.75)', 'rgba(244, 67, 54, 0.75)'],
+                        borderColor: ['#4caf50', '#f44336'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 100,
+                            ticks: { stepSize: 20 },
+                            grid: { color: 'rgba(0,0,0,0.06)' }
+                        },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderCriteriaChart(details, labels) {
+            const ctx = document.getElementById('criteriaChart');
+            if (!ctx) return;
+            if (criteriaChartInstance) criteriaChartInstance.destroy();
+            const keys = Object.keys(details || {});
+            if (keys.length === 0) return;
+            criteriaChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: keys.map(k => (labels[k] || k).replace('?', '').slice(0, 25)),
+                    datasets: [{
+                        label: 'Score',
+                        data: keys.map(k => details[k]),
+                        backgroundColor: keys.map(k => details[k] > 0 ? 'rgba(76, 175, 80, 0.7)' : (details[k] < 0 ? 'rgba(244, 67, 54, 0.7)' : 'rgba(158, 158, 158, 0.5)')),
+                        borderColor: keys.map(k => details[k] > 0 ? '#4caf50' : (details[k] < 0 ? '#f44336' : '#9e9e9e')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            min: -3, max: 3,
+                            ticks: { stepSize: 1 },
+                            grid: { color: 'rgba(0,0,0,0.06)' }
+                        },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        async function renderResultsGrowthChart() {
+            const ctx = document.getElementById('resultsGrowthChart');
+            if (!ctx) return;
+            try {
+                const res = await fetch('/stats');
+                const data = await res.json();
+                if (resultsGrowthChartInstance) resultsGrowthChartInstance.destroy();
+                const g = data.growth && data.growth.length > 0 ? data.growth : [{ iteration: 0, total: 0 }];
+                resultsGrowthChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: g.map(function(d) { return d.iteration; }),
+                        datasets: [{
+                            label: 'Stored records (total)',
+                            data: g.map(function(d) { return d.total; }),
+                            borderColor: '#5c6bc0',
+                            backgroundColor: 'rgba(92, 107, 192, 0.12)',
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#5c6bc0'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' }, title: { display: false } },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Time (records)' },
+                                grid: { color: 'rgba(0,0,0,0.06)' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Stored records' },
+                                grid: { color: 'rgba(0,0,0,0.06)' }
+                            }
+                        }
+                    }
+                });
+            } catch (e) { /* ignore */ }
+        }
+
+        function renderResultsModelCompareChart(bertConf, heuristicConf, agreement) {
+            const ctx = document.getElementById('resultsModelCompareChart');
+            if (!ctx) return;
+            if (resultsModelCompareChartInstance) resultsModelCompareChartInstance.destroy();
+            const hybrid = agreement ? (bertConf + heuristicConf) / 2 : Math.min(bertConf, heuristicConf);
+            const b = Math.round((bertConf || 0) * 100) / 100;
+            const h = Math.round((heuristicConf || 0) * 100) / 100;
+            const hy = Math.round(hybrid * 100) / 100;
+            resultsModelCompareChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Heuristic', 'BERT', 'Hybrid'],
+                    datasets: [{
+                        label: 'Confidence',
+                        data: [h, b, hy],
+                        backgroundColor: ['rgba(255, 152, 0, 0.75)', 'rgba(33, 150, 243, 0.75)', 'rgba(92, 107, 192, 0.75)'],
+                        borderColor: ['#ff9800', '#2196f3', '#5c6bc0'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, title: { display: false } },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 1,
+                            ticks: { stepSize: 0.2 },
+                            title: { display: true, text: 'Confidence' },
+                            grid: { color: 'rgba(0,0,0,0.06)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        async function renderStatsChart() {
+            const ctx = document.getElementById('statsChart');
+            if (!ctx) return;
+            try {
+                const res = await fetch('/stats');
+                const data = await res.json();
+                if (statsChartInstance) statsChartInstance.destroy();
+                statsChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Real News', 'Fake News'],
+                        datasets: [{
+                            data: [data.real || 0, data.fake || 0],
+                            backgroundColor: ['rgba(76, 175, 80, 0.8)', 'rgba(244, 67, 54, 0.8)'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: false }
+                        }
+                    }
+                });
+                document.getElementById('statsSummary').textContent =
+                    `Total: ${data.total || 0} verifications (${data.real || 0} real, ${data.fake || 0} fake)`;
+            } catch (e) {
+                document.getElementById('statsSummary').textContent = 'Could not load stats.';
+            }
+        }
+
+        async function loadMainStats() {
+            const ctx = document.getElementById('mainStatsChart');
+            const summaryEl = document.getElementById('mainStatsSummary');
+            const growthCtx = document.getElementById('growthChart');
+            if (!ctx) return;
+            try {
+                const res = await fetch('/stats');
+                const data = await res.json();
+                if (mainStatsChartInstance) mainStatsChartInstance.destroy();
+                mainStatsChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Real News', 'Fake News'],
+                        datasets: [{
+                            label: 'Count',
+                            data: [data.real || 0, data.fake || 0],
+                            backgroundColor: ['rgba(76, 175, 80, 0.7)', 'rgba(244, 67, 54, 0.7)'],
+                            borderColor: ['#4caf50', '#f44336'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, title: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+                summaryEl.textContent = `Total: ${data.total || 0} verifications (${data.real || 0} real, ${data.fake || 0} fake)`;
+
+                if (growthCtx && data.growth && data.growth.length > 0) {
+                    if (growthChartInstance) growthChartInstance.destroy();
+                    const g = data.growth;
+                    growthChartInstance = new Chart(growthCtx, {
+                        type: 'line',
+                        data: {
+                            labels: g.map(function(d) { return d.iteration; }),
+                            datasets: [{
+                                label: 'Stored records (total)',
+                                data: g.map(function(d) { return d.total; }),
+                                borderColor: '#5c6bc0',
+                                backgroundColor: 'rgba(92, 107, 192, 0.1)',
+                                fill: true,
+                                tension: 0.2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom' }, title: { display: false } },
+                            scales: {
+                                x: { title: { display: true, text: 'Time (records)' } },
+                                y: { beginAtZero: true, title: { display: true, text: 'Stored records' } }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                if (summaryEl) summaryEl.textContent = 'No records yet. Verify some news to see stats.';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMainStats();
+        });
+    </script>
+</body>
+</html>

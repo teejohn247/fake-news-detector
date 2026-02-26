@@ -1,0 +1,17 @@
+# Render Blueprint - Fake News Detector
+# See: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: fake-news-detector
+    runtime: python
+    region: oregon
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 300 app:app
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
+
+    # BERT needs ~2GB RAM. Upgrade to Starter/paid in Dashboard if the app crashes at startup.

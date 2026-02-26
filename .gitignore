@@ -1,0 +1,39 @@
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Fine-tuned / downloaded models (app uses Hugging Face at runtime)
+models/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.egg-info/
+dist/
+build/
+*.egg
+
+# Environment
+.env
+.env.local
+*.local
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# App-generated (optional: keep blockchain in repo if you want)
+# blockchain_records.json
+feedback_disagreements.jsonl
+
+# Cache
+.cache/
+*.log
