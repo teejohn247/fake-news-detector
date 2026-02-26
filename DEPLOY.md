@@ -39,6 +39,15 @@ If the push still fails (history still has big files), you may need to remove th
 
 ---
 
+## Python version (required for build)
+
+The repo includes a **`.python-version`** file set to **3.12.4**. Render uses this to select the Python version. **Do not remove it**—with Python 3.14, pandas and other packages would build from source and fail.
+
+If a previous deploy used Python 3.14, clear the build cache so Render picks 3.12:
+- In Render Dashboard → your service → **Settings** → **Build & Deploy** → **Clear build cache**, then trigger a new deploy.
+
+---
+
 ## Option 1: Deploy from Render Dashboard (recommended)
 
 ### 1. Push your project to GitHub
